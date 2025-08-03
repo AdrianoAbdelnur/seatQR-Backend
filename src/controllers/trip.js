@@ -1,5 +1,6 @@
 const Bus = require("../models/Bus");
-const Trip = require("../models/trip");
+const Trip = require("../models/Trip");
+
 
 const addTrip = async (req, res) => {
   try {

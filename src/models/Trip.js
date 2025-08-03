@@ -4,8 +4,8 @@ const passengerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     document: { type: String, required: true, trim: true },
-    seatNumber: { type: Number }, // optional, if you assign seats later
-    boarded: { type: Boolean, default: false }, // optional, for boarding control
+    seatNumber: { type: Number }, 
+    boarded: { type: Boolean, default: false },
   },
   { _id: false }
 );
