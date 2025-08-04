@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/addTrip', addTrip);
 router.get('/getTrips', getTrips);
-router.post('/trip/:tripId/board', boardPassenger);
-router.post('/trip/:tripId/seat', setPassengerSeat);
+router.post('/:tripId/board', boardPassenger);
+router.post('/:tripId/seat', setPassengerSeat);
 
 module.exports = router; 
