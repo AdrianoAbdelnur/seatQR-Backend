@@ -8,6 +8,6 @@ router.post('/addTrip', addTrip);
 router.get('/getTrips', getTrips);
 router.post('/:tripId/board', boardPassenger);
 router.post('/:tripId/seat', setPassengerSeat);
-router.post('/:tripId/updateStatus', updateTripStatus);
+router.patch('/:tripId/updateStatus', updateTripStatus);
 
 module.exports = router; 
