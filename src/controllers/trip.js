@@ -265,9 +265,10 @@ const updateTripStatus = async (req, res) => {
 
     const updatedTrip = await Trip.findByIdAndUpdate(
       tripId,
-      { status },
+      { tripStatus: status },
       { new: true }
-    ).lean();
+    )
+    
 
     if (!updatedTrip) {
       return res.status(404).json({ ok: false, message: 'Trip no encontrado' });
