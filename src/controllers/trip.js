@@ -249,9 +249,41 @@ const setPassengerSeat = async (req, res) => {
   }
 };
 
+
+const updateTripStatus = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = [
+      'pending', 'started', 'completed', 'cancelled'
+    ];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ ok: false, message: `Estado inválido: ${status}` });
+    }
+
+    const updatedTrip = await Trip.findByIdAndUpdate(
+      tripId,
+      { status },
+      { new: true, projection: { status: 1 } }
+    ).lean();
+
+    if (!updatedTrip) {
+      return res.status(404).json({ ok: false, message: 'Trip no encontrado' });
+    }
+
+    return res.json({ ok: true, status: updatedTrip.status });
+  } catch (err) {
+    console.error("updateTripStatus error:", err);
+    return res.status(500).json({ ok: false, message: "Error interno" });
+  }
+};
+
 module.exports = {
   addTrip,
   getTrips,
   boardPassenger,
   setPassengerSeat,
+  updateTripStatus
 };
