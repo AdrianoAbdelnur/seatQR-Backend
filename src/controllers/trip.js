@@ -266,7 +266,7 @@ const updateTripStatus = async (req, res) => {
     const updatedTrip = await Trip.findByIdAndUpdate(
       tripId,
       { status },
-      { new: true, projection: { status: 1 } }
+      { new: true }
     ).lean();
 
     if (!updatedTrip) {
