@@ -274,7 +274,7 @@ const updateTripStatus = async (req, res) => {
       return res.status(404).json({ ok: false, message: 'Trip no encontrado' });
     }
 
-    return res.json({ ok: true, status: updatedTrip.status });
+    return res.json({ ok: true, status: updatedTrip.tripStatus });
   } catch (err) {
     console.error("updateTripStatus error:", err);
     return res.status(500).json({ ok: false, message: "Error interno" });
