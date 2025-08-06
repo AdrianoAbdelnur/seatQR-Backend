@@ -182,7 +182,9 @@ const boardPassenger = async (req, res) => {
 const setPassengerSeat = async (req, res) => {
   try {
     const { tripId } = req.params;
-    const { document, seatNumber, alsoBoard } = req.body;
+    const { document, seatLevel, seatNumber, plate, alsoBoard } = req.body;
+
+    console.log("HOLA",document, seatNumber, alsoBoard, tripId)
 
     if (!document || seatNumber == null) {
       return res.status(400).json({ ok: false, message: "Faltan document o seatNumber" });
@@ -212,7 +214,11 @@ const setPassengerSeat = async (req, res) => {
     }
 
     const updateSet = {
-      [`passengers.${idx}.seatNumber`]: seatNumber,
+      [`passengers.${idx}.seat`]: {
+        number: seatNumber,
+        level: seatLevel,   
+        plate: plate,   
+      }
     };
     if (alsoBoard === true) {
       updateSet[`passengers.${idx}.boarded`] = true;
@@ -220,10 +226,12 @@ const setPassengerSeat = async (req, res) => {
 
     const originalDoc = passengers[idx].document;
 
+    console.log("OTRO",updateSet, originalDoc)
+
     const updated = await Trip.findOneAndUpdate(
       { _id: tripId, [`passengers.${idx}.document`]: originalDoc },
       { $set: updateSet },
-      { new: true, projection: { passengers: 1 } }
+      { new: true}
     ).lean();
 
     const passenger = updated.passengers[idx];

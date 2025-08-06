@@ -12,9 +12,14 @@ const passengerSchema = new mongoose.Schema(
       required: true, 
       trim: true 
     },
-    seatNumber: { 
-      type: Number 
-    }, 
+    seat: {
+      type: {
+        number: Number,     
+        level: String,     
+        plate: String ,    
+      },
+      default: null
+    },
     boarded: { 
       type: Boolean, 
       default: false 
