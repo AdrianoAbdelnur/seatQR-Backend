@@ -1,7 +1,7 @@
 const Bus = require("../models/Bus");
 const Trip = require("../models/Trip");
 
-/* ---------- Utils de normalización ---------- */
+
 const normalizeName = (s) =>
   String(s || "")
     .normalize("NFD")
@@ -10,13 +10,11 @@ const normalizeName = (s) =>
     .replace(/\s+/g, " ")
     .trim();
 
-// Documento: quita puntos/guiones/espacios y mayúsculas
+
 const normalizeDoc = (s = "") =>
   String(s).replace(/[.\-\s]/g, "").trim().toUpperCase();
 
-/* =========================================================
- * POST /trip  (crear viaje)
- * =======================================================*/
+
 const addTrip = async (req, res) => {
   try {
     const {
@@ -33,11 +31,10 @@ const addTrip = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Bus + layout para capacidad
     const bus = await Bus.findById(busId).populate("layout").lean();
     if (!bus) return res.status(404).json({ error: "Bus not found" });
 
-    // Capacidad
+  
     let capacity =
       typeof bus.totalSeatCount === "number" ? bus.totalSeatCount : 0;
     if (!capacity) {
@@ -48,7 +45,6 @@ const addTrip = async (req, res) => {
       capacity = lower + upper;
     }
 
-    // Limpiar duplicados (mismo name+document)
     const cleanDoc = (s) => String(s || "").replace(/\D+/g, "").trim();
 
     const seen = new Set();
@@ -70,7 +66,7 @@ const addTrip = async (req, res) => {
       });
     }
 
-    // Validar capacidad
+
     if (cleanedPassengers.length > capacity) {
       return res.status(400).json({
         error: "Capacity exceeded",
@@ -79,7 +75,7 @@ const addTrip = async (req, res) => {
       });
     }
 
-    // Unificar fecha/hora
+
     const departureAt = new Date(`${date}T${time}:00Z`);
 
     const trip = await Trip.create({
@@ -104,9 +100,7 @@ const addTrip = async (req, res) => {
   }
 };
 
-/* =========================================================
- * GET /trips (listado con paginación)
- * =======================================================*/
+
 const getTrips = async (req, res) => {
   try {
     const { page = 1, limit = 10, q, routeId } = req.query;
@@ -142,10 +136,7 @@ const getTrips = async (req, res) => {
   }
 };
 
-/* =========================================================
- * POST /trip/:tripId/board  (marcar abordo)
- * body: { document: string }
- * =======================================================*/
+
 const boardPassenger = async (req, res) => {
   try {
     const { tripId } = req.params;
@@ -171,7 +162,6 @@ const boardPassenger = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Pasajero no pertenece a este trip" });
     }
 
-    // Actualizo usando el valor exacto guardado en DB (evita arrayFilters con regex)
     const originalDoc = trip.passengers[idx].document;
 
     const updated = await Trip.findOneAndUpdate(
@@ -188,12 +178,7 @@ const boardPassenger = async (req, res) => {
   }
 };
 
-/* =========================================================
- * POST /trip/:tripId/seat  (asignar asiento)
- * body: { document: string, seatNumber: number, alsoBoard?: boolean }
- * - Valida que el asiento no esté ocupado por otro pasajero.
- * - Si alsoBoard === true, también marca boarded=true.
- * =======================================================*/
+
 const setPassengerSeat = async (req, res) => {
   try {
     const { tripId } = req.params;
@@ -217,7 +202,7 @@ const setPassengerSeat = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Pasajero no pertenece a este trip" });
     }
 
-    // Asiento ya tomado por otro
+    
     const takenBy = passengers.find((p, i) => i !== idx && p.seatNumber === seatNumber);
     if (takenBy) {
       return res.status(409).json({
@@ -255,23 +240,40 @@ const updateTripStatus = async (req, res) => {
     const { tripId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = [
-      'pending', 'started', 'completed', 'cancelled'
-    ];
+    const validStatuses = ['pending', 'started', 'completed', 'cancelled'];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ ok: false, message: `Estado inválido: ${status}` });
+    }
+
+    const trip = await Trip.findById(tripId).select('bus');
+    if (!trip) {
+      return res.status(404).json({ ok: false, message: 'Trip no encontrado' });
+    }
+
+    if (status === 'started') {
+      const otherTrip = await Trip.findOne({
+        _id: { $ne: tripId },           
+        bus: trip.bus,                  
+        tripStatus: 'started'            
+      });
+
+      if (otherTrip) {
+        return res.status(409).json({
+          ok: false,
+          message: `La unidad ya tiene un viaje iniciado. ID: ${otherTrip._id}`,
+        });
+      }
     }
 
     const updatedTrip = await Trip.findByIdAndUpdate(
       tripId,
       { tripStatus: status },
       { new: true }
-    )
-    
+    );
 
     if (!updatedTrip) {
-      return res.status(404).json({ ok: false, message: 'Trip no encontrado' });
+      return res.status(404).json({ ok: false, message: 'Trip no encontrado al actualizar' });
     }
 
     return res.json({ ok: true, status: updatedTrip.tripStatus });
