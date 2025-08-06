@@ -1,7 +1,6 @@
 const Bus = require("../models/Bus");
 const Trip = require("../models/Trip");
 
-
 const normalizeName = (s) =>
   String(s || "")
     .normalize("NFD")
@@ -10,10 +9,8 @@ const normalizeName = (s) =>
     .replace(/\s+/g, " ")
     .trim();
 
-
 const normalizeDoc = (s = "") =>
   String(s).replace(/[.\-\s]/g, "").trim().toUpperCase();
-
 
 const addTrip = async (req, res) => {
   try {
